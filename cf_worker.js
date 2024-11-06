@@ -10,9 +10,9 @@ const html = `<!DOCTYPE html>
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding-top: 15vh;
         }
         h1 {
             font-size: 4rem;
@@ -48,8 +48,12 @@ const html = `<!DOCTYPE html>
             margin-top: 2rem;
         }
         @media (max-width: 600px) {
+            body {
+                padding-top: 10vh;
+            }
             h1 {
                 font-size: 3rem;
+                margin-bottom: 1.5rem;
             }
             #search-input {
                 width: 250px;
@@ -76,10 +80,9 @@ const html = `<!DOCTYPE html>
             window.location.href = url;
         }
 
-        function checkConnectivity() {
-            const query = window.location.hash.slice(1);
+        function autoSearch() {
+            const query = document.getElementById('search-input').value;
             if (query) {
-                document.getElementById('search-input').value = decodeURIComponent(query);
                 fetch('https://www.google.com/generate_204', { 
                     mode: 'no-cors',
                     cache: 'no-store',
@@ -88,8 +91,18 @@ const html = `<!DOCTYPE html>
                 .then(() => search('google'))
                 .catch(() => search('bing'));
             }
+            return false;
         }
 
+        function checkConnectivity() {
+            const query = window.location.hash.slice(1);
+            if (query) {
+                document.getElementById('search-input').value = decodeURIComponent(query);
+                autoSearch();
+            }
+        }
+
+        document.getElementById('search-form').onsubmit = autoSearch;
         window.onload = checkConnectivity;
     </script>
 </body>
