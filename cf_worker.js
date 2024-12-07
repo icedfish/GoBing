@@ -3,6 +3,9 @@ const html = `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="dns-prefetch" href="https://www.google.com/" />
+    <link rel="dns-prefetch" href="https://www.bing.com/" />
+    <link rel="icon" href="https://www.google.com/favicon.ico" />
     <title>GoBing</title>
     <style>
         body {
@@ -70,40 +73,58 @@ const html = `<!DOCTYPE html>
             <button type="button" onclick="search('bing')">Bing</button>
         </div>
     </form>
-    <a id="help-link" href="https://github.com/icedfish/GoBing">Help</a>
+    <a id="help-link" href="https://github.com/icedfish/GoBing">Help</a> 
+    <div id="version" style="color: gray;">ver:2024-12-07</div>
     <script>
         function search(engine) {
             const query = encodeURIComponent(document.getElementById('search-input').value);
             const url = engine === 'google' 
                 ? 'https://www.google.com/search?q=' + query
                 : 'https://www.bing.com/search?q=' + query;
+
             window.location.href = url;
+        }
+
+        function checkGoogleConnectivity(callback) {
+            fetch('https://www.google.com/generate_204', { 
+                mode: 'no-cors',
+                cache: 'no-store',
+                signal: AbortSignal.timeout(1000)
+            })
+            .then((response) => {
+                window.googleAvailable = true;
+                callback();
+            })
+            .catch(() => {
+                window.googleAvailable = false;
+                callback();
+            });
         }
 
         function autoSearch() {
             const query = document.getElementById('search-input').value;
             if (query) {
-                fetch('https://www.google.com/generate_204', { 
-                    mode: 'no-cors',
-                    cache: 'no-store',
-                    signal: AbortSignal.timeout(500)
-                })
-                .then(() => search('google'))
-                .catch(() => search('bing'));
+                if (window.googleAvailable) {
+                    search('google');
+                } else {
+                    search('bing');
+                }
             }
             return false;
         }
 
-        function checkConnectivity() {
-            const query = window.location.hash.slice(1);
-            if (query) {
-                document.getElementById('search-input').value = decodeURIComponent(query);
-                autoSearch();
-            }
+        function checkQuery() {
+            checkGoogleConnectivity(() => {
+                const query = window.location.hash.slice(1);
+                if (query) {
+                    document.getElementById('search-input').value = decodeURIComponent(query);
+                    autoSearch();
+                }
+            });
         }
 
         document.getElementById('search-form').onsubmit = autoSearch;
-        window.onload = checkConnectivity;
+        window.onload = checkQuery;
     </script>
 </body>
 </html>`;
@@ -119,7 +140,8 @@ async function handleRequest(request) {
     return new Response(html, {
       headers: {
         'Content-Type': 'text/html',
-        'Cache-Control': 'public, max-age=2592000'
+        'Cache-Control': 'public, max-age=2592000, immutable',
+        'Expires': new Date(Date.now() + 2592000000).toUTCString()
       }
     });
   } else {
