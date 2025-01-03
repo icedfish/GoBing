@@ -5,7 +5,9 @@ const html = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="dns-prefetch" href="https://www.google.com/" />
     <link rel="dns-prefetch" href="https://www.bing.com/" />
-    <link rel="icon" href="https://www.google.com/favicon.ico" />
+    <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="GoBing Search">
+    <link rel="icon" href="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" />
+    <link rel="apple-touch-icon" href="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" />
     <title>GoBing</title>
     <style>
         body {
@@ -66,15 +68,21 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
     <h1><span>G</span><span>o</span><span>B</span><span>i</span><span>n</span><span>g</span></h1>
-    <form id="search-form">
-        <input type="text" id="search-input" placeholder="Enter your search query">
+    <form id="search-form" action="/#">
+        <input type="text" id="search-input" placeholder="Enter your search query" autofocus>
         <div id="search-buttons">
             <button type="button" onclick="search('google')">Google</button>
             <button type="button" onclick="search('bing')">Bing</button>
         </div>
     </form>
     <a id="help-link" href="https://github.com/icedfish/GoBing">Help</a> 
-    <div id="version" style="color: gray;">ver:2024-12-07</div>
+    <span id="version" style="color: gray;"></span>
+    <script>
+        const cacheDate = new Date('{{cache_date}}');
+        const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+        const hoursAgo = ((now - cacheDate) / (1000 * 60 * 60)).toFixed(1);
+        document.getElementById('version').textContent = 'cached @ ' + hoursAgo + ' hours ago';
+    </script>
     <script>
         function search(engine) {
             const query = encodeURIComponent(document.getElementById('search-input').value);
@@ -129,19 +137,36 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// https://github.com/dewitt/opensearch/blob/master/opensearch-1-1-draft-6.md
+const opensearchXml = `<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>GoBing</ShortName>
+  <Description>Gobing Search</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Language>*</Language>
+  <Image width="32" height="32" type="image/x-icon">https://www.google.com/favicon.ico</Image>
+  <Url type="text/html" method="get" template="https://gobing.yubing.work/#{searchTerms}"/>
+</OpenSearchDescription>`;
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
 });
 
 async function handleRequest(request) {
   const url = new URL(request.url);
+  const cache_date = new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
   
   if (url.pathname === '/') {
-    return new Response(html, {
+    return new Response(html.replace('{{cache_date}}', cache_date), {
       headers: {
         'Content-Type': 'text/html',
         'Cache-Control': 'public, max-age=2592000, immutable',
         'Expires': new Date(Date.now() + 2592000000).toUTCString()
+      }
+    });
+  } else if (url.pathname === '/opensearch.xml') {
+    return new Response(opensearchXml, {
+      headers: {
+        'Content-Type': 'application/opensearchdescription+xml',
       }
     });
   } else {
