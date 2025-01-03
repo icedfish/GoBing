@@ -22,9 +22,9 @@ Chrome 桌面版：
 Edge 桌面版：
 打开： edge://settings/searchEngines
 
-Safari 桌面版:
+Safari & Chrome 手机版:
 很遗憾，不支持添加自定义搜索引擎
-如需使用，可以考虑把 https://gobing.yubing.work/ 设为默认 tab
+建议把 https://gobing.yubing.work/ 添加到 Home Screen
 
 ## 初始 Corsur Compose
  见 ./prompts.md
