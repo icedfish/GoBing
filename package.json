@@ -1,0 +1,21 @@
+{
+  "name": "search-engine-switcher-gobing",
+  "version": "1.0.0",
+  "description": "A search engine switcher running on Cloudflare Workers",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "search-engine",
+    "switcher"
+  ],
+  "author": "yubing | hi@yubing.work",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
+

@@ -1,13 +1,13 @@
-const html = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="dns-prefetch" href="https://www.google.com/" />
-    <link rel="dns-prefetch" href="https://www.bing.com/" />
+    <link rel="preconnect" href="https://www.google.com" crossorigin>
+    <link rel="preconnect" href="https://www.bing.com" crossorigin>
     <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="GoBing Search">
-    <link rel="icon" href="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" />
-    <link rel="apple-touch-icon" href="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" />
+    <link rel="icon" href="{{ICON_DATA_URI}}" />
+    <link rel="apple-touch-icon" href="{{ICON_DATA_URI}}" />
     <title>GoBing</title>
     <style>
         body {
@@ -78,7 +78,7 @@ const html = `<!DOCTYPE html>
     <a id="help-link" href="https://github.com/icedfish/GoBing">Help</a> 
     <span id="version" style="color: gray;"></span>
     <script>
-        const cacheDate = new Date('{{cache_date}}');
+        const cacheDate = new Date(`{{CACHE_DATE}}`);
         const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
         const hoursAgo = ((now - cacheDate) / (1000 * 60 * 60)).toFixed(1);
         document.getElementById('version').textContent = 'cached @ ' + hoursAgo + ' hours ago';
@@ -86,18 +86,18 @@ const html = `<!DOCTYPE html>
     <script>
         function search(engine) {
             const query = encodeURIComponent(document.getElementById('search-input').value);
-            const url = engine === 'google' 
-                ? 'https://www.google.com/search?q=' + query
-                : 'https://www.bing.com/search?q=' + query;
+            const url = engine === 'google'
+                ? 'https://www.google.com/search?q=' + query + '&hl=zh-CN&lr=lang_zh-CN&gl=CN&ie=UTF-8&oe=UTF-8'
+                : 'https://www.bing.com/search?q=' + query + '&form=QBLH&pc=U316&setlang=zh-CN&cc=CN';
 
             window.location.href = url;
         }
 
         function checkGoogleConnectivity(callback) {
-            fetch('https://www.google.com/generate_204', { 
+            fetch('https://www.google.com/generate_204', {
                 mode: 'no-cors',
                 cache: 'no-store',
-                signal: AbortSignal.timeout(1000)
+                signal: AbortSignal.timeout(500)
             })
             .then((response) => {
                 window.googleAvailable = true;
@@ -132,44 +132,8 @@ const html = `<!DOCTYPE html>
         }
 
         document.getElementById('search-form').onsubmit = autoSearch;
-        window.onload = checkQuery;
+        document.addEventListener('DOMContentLoaded', checkQuery);
     </script>
 </body>
-</html>`;
+</html>
 
-// https://github.com/dewitt/opensearch/blob/master/opensearch-1-1-draft-6.md
-const opensearchXml = `<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
-  <ShortName>GoBing</ShortName>
-  <Description>Gobing Search</Description>
-  <InputEncoding>UTF-8</InputEncoding>
-  <Language>*</Language>
-  <Image width="32" height="32" type="image/x-icon">https://www.google.com/favicon.ico</Image>
-  <Url type="text/html" method="get" template="https://gobing.yubing.work/#{searchTerms}"/>
-</OpenSearchDescription>`;
-
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-  const url = new URL(request.url);
-  const cache_date = new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
-  
-  if (url.pathname === '/') {
-    return new Response(html.replace('{{cache_date}}', cache_date), {
-      headers: {
-        'Content-Type': 'text/html',
-        'Cache-Control': 'public, max-age=2592000, immutable',
-        'Expires': new Date(Date.now() + 2592000000).toUTCString()
-      }
-    });
-  } else if (url.pathname === '/opensearch.xml') {
-    return new Response(opensearchXml, {
-      headers: {
-        'Content-Type': 'application/opensearchdescription+xml',
-      }
-    });
-  } else {
-    return Response.redirect('https://github.com/icedfish/GoBing', 302);
-  }
-}

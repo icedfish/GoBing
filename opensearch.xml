@@ -1,0 +1,8 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>GoBing</ShortName>
+  <Description>Gobing Search</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Language>*</Language>
+  <Image width="32" height="32" type="image/png">{{ICON_DATA_URI}}</Image>
+  <Url type="text/html" method="get" template="https://gobing.yubing.work/#{searchTerms}"/>
+</OpenSearchDescription>
